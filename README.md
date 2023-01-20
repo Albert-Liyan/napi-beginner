@@ -7,13 +7,12 @@
 node-addon-api@1.7.2  
 node-gyp@9.3.1 
 
-##### Demo1：最简单native cpp
+#### Demo1：最简单native cpp
 napi demo工程
 `binding.gyp` file contains all the files that need to be compiled and all the include files / libraries that the project will be using
 
 执行`npm run build`
 ```
-....
 在此解决方案中一次生成一个项目。若要启用并行生成，请添加“-m”开关。
   nothing.vcxproj -> D:\Code\node_js\napi_project\test-addon\build\Release\\nothing.lib
   main.cpp
@@ -30,7 +29,7 @@ gyp info ok
 addon {}
 ```
 
-##### Demo2：Exporting Hello World C++ function
+#### Demo2:Exporting Hello World C++ function
 `HelloWrapped` 是NAPI封装函数，所有的export C++ function流程都是创建NAPI封装函数、添加`exports`对象。
 所有的封装函数都需要设置Napi namespace的input params、returnValue，这里`HelloWrapped` 中`returnValue`是output，没有input参数。
 所有的封装函数都必须传入`CallbackInfo`参数，包含上下文信息、input params。
@@ -54,4 +53,31 @@ Napi::Object functionexample::Init(Napi::Env env, Napi::Object exports)
   return exports;
 }
 ```
+#### Demo3:Exporting function with input params
+```
+// C++ function
+int add(int a, int b){
+  return a + b;
+}
 
+// NAPI封装函数
+Napi::Number functionexample::AddWrapped(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    if (info.Length() < 2 || !info[0].IsNumber() || !info[1].IsNumber()) {
+        Napi::TypeError::New(env, "Number expected").ThrowAsJavaScriptException();
+    } 
+
+    Napi::Number first = info[0].As<Napi::Number>();
+    Napi::Number second = info[1].As<Napi::Number>();
+
+    int returnValue = functionexample::add(first.Int32Value(), second.Int32Value());
+    
+    return Napi::Number::New(env, returnValue);
+}
+
+// export C++ function添加exports对象
+exports.Set("add", Napi::Function::New(env, functionexample::AddWrapped));
+
+// test
+console.log('hello ', testAddon.add(5, 10));
+```
