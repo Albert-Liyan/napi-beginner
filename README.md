@@ -81,3 +81,29 @@ exports.Set("add", Napi::Function::New(env, functionexample::AddWrapped));
 // test
 console.log('hello ', testAddon.add(5, 10));
 ```
+
+#### Demo4:Exporting a Hello World C++ Class
+
+`func`定义export出去给JS的类，`func`赋值给constructor（C++静态函数引用`static Napi::FunctionReference constructor;`）；
+
+```
+Napi::Function func = DefineClass(env, "ClassExample", 
+{
+  InstanceMethod("add", &ClassExample::Add),
+  InstanceMethod("getValue", &ClassExample::GetValue),
+});
+
+constructor = Napi::Persistent(func);
+constructor.SuppressDestruct(); 
+```
+自测test
+```
+const classInstance = new testAddon.ClassExample(4.3);
+console.log('Testing class initial value : ',classInstance.getValue());
+console.log('After adding 3.3 : ',classInstance.add(3.3));
+
+执行结果：
+Testing class initial value :  4.3
+index.js:8
+After adding 3.3 :  7.6
+```
